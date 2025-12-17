@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agri_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  milvus:
+    image: milvusdb/milvus:v2.2.11
+    restart: unless-stopped
+    environment:
+      TZ: "UTC"
+    ports:
+      - "19530:19530"
+      - "19121:19121"
+    volumes:
+      - milvus_data:/var/lib/milvus
+
+  app:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/agri_db
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - postgres
+      - milvus
+
+volumes:
+  pgdata:
+  milvus_data:

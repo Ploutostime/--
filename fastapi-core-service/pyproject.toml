@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "fastapi-core-service"
+version = "0.1.0"
+description = "A FastAPI web service with WebSocket management and conversation session handling."
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.75.0"
+uvicorn = "^0.17.0"
+pydantic = "^1.9.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
