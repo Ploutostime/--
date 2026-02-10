@@ -10,7 +10,7 @@ results = {"db": None, "milvus": None}
 print("Starting smoke test...")
 
 try:
-    from db import engine
+    from src.app.db import engine
     with engine.connect() as conn:
         r = conn.execute("SELECT 1")
         results["db"] = {"ok": True, "detail": str(list(r))}

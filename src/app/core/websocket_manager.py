@@ -1,19 +1,30 @@
+import asyncio
+
+
 class WebSocketManager:
     def __init__(self):
         self.active_connections = {}
 
-    async def connect(self, websocket, user_id: str):
+    def add_connection(self, websocket, user_id: str):
         self.active_connections[user_id] = websocket
 
-    async def disconnect(self, user_id: str):
+    def remove_connection(self, user_id: str):
         if user_id in self.active_connections:
             del self.active_connections[user_id]
 
     async def send_message(self, user_id: str, message: str):
         if user_id in self.active_connections:
             websocket = self.active_connections[user_id]
-            await websocket.send_text(message)
+            maybe = websocket.send_text(message)
+            if asyncio.iscoroutine(maybe):
+                await maybe
 
-    async def broadcast(self, message: str):
+    def broadcast(self, message: str):
         for connection in self.active_connections.values():
-            await connection.send_text(message)
+            try:
+                maybe = connection.send_text(message)
+                if asyncio.iscoroutine(maybe):
+                    asyncio.create_task(maybe)
+            except Exception:
+                # ignore errors in broadcast
+                pass

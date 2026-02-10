@@ -1,16 +1,23 @@
-from fastapi import APIRouter
-from app.core.conversation_service import ConversationService
+from fastapi import APIRouter, HTTPException
+from src.app.core.conversation_service import ConversationService
 
 router = APIRouter()
 conversation_service = ConversationService()
 
+
 @router.post("/conversations/")
-async def create_conversation(conversation_data: dict):
-    return conversation_service.create_conversation(conversation_data)
+async def create_conversation(payload: dict):
+    user_id = payload.get("user_id") if isinstance(payload, dict) else None
+    return conversation_service.start_conversation(user_id)
+
 
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(conversation_id: str):
-    return conversation_service.get_conversation(conversation_id)
+    conv = conversation_service.get_conversation(conversation_id)
+    if conv is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conv
+
 
 @router.get("/conversations/")
 async def list_conversations():

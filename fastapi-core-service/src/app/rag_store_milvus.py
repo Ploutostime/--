@@ -2,11 +2,12 @@ import os
 from typing import List, Optional
 from langchain.embeddings import OpenAIEmbeddings
 from milvus_client import ensure_collection
-from db import SessionLocal
-from models import DocumentRecord
+from src.app.db import SessionLocal
+from src.app.models import DocumentRecord
 from sqlalchemy import select
 
 EMBED_DIM = int(os.getenv("EMBED_DIM", "1536"))
+
 
 class RAGStoreMilvus:
     def __init__(self, collection_name: str = None, embedding_model=None):
@@ -15,14 +16,14 @@ class RAGStoreMilvus:
         self.db = SessionLocal
 
     def add_documents(self, docs: List[str], metadatas: Optional[List[dict]] = None, sources: Optional[List[str]] = None):
-        metadatas = metadatas or [{}]*len(docs)
-        sources = sources or [None]*len(docs)
+        metadatas = metadatas or [{}] * len(docs)
+        sources = sources or [None] * len(docs)
         embeddings = self.embedding_model.embed_documents(docs)
         with self.db() as session:
             session.expire_on_commit = False
             records = []
             for content, meta, src in zip(docs, metadatas, sources):
-                rec = DocumentRecord(content=content, metadata=meta, source=src)
+                rec = DocumentRecord(content=content, meta=meta, source=src)
                 session.add(rec)
                 records.append(rec)
             session.commit()
@@ -54,7 +55,7 @@ class RAGStoreMilvus:
                 results.append({
                     "text": row.content,
                     "score": h.get("score"),
-                    "metadata": row.metadata or {},
+                    "metadata": row.meta or {},
                     "source": row.source or "",
                     "milvus_id": row.milvus_id or "",
                 })

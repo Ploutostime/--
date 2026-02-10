@@ -1,29 +1,52 @@
 from fastapi import APIRouter, HTTPException
-from typing import List
-from ..core.conversation_service import ConversationService
-from ..models.conversation import Conversation
+from typing import Optional
+from src.app.core.conversation_service import ConversationService
 
 router = APIRouter()
 conversation_service = ConversationService()
 
-@router.post("/conversations/", response_model=Conversation)
-async def create_conversation(conversation: Conversation):
-    return conversation_service.start_conversation(conversation)
 
-@router.get("/conversations/", response_model=List[Conversation])
-async def get_conversations():
-    return conversation_service.get_all_conversations()
+@router.post("/conversations/")
+async def create_conversation(payload: dict):
+    user_id = payload.get("user_id") if isinstance(payload, dict) else None
+    return conversation_service.start_conversation(user_id)
 
-@router.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str):
-    conversation = conversation_service.get_conversation(conversation_id)
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    return conversation
 
-@router.delete("/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
-    success = conversation_service.delete_conversation(conversation_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    return {"detail": "Conversation deleted successfully"}
+@router.post("/conversations/{conversation_id}/messages")
+async def post_message(conversation_id: str, payload: dict):
+    user_id = payload.get("user_id") if isinstance(payload, dict) else None
+    content = payload.get("content") if isinstance(payload, dict) else None
+    from fastapi import APIRouter, HTTPException
+    from typing import Optional
+    from src.app.core.conversation_service import ConversationService
+
+    router = APIRouter()
+    conversation_service = ConversationService()
+
+
+    @router.post("/conversations/")
+    async def create_conversation(payload: dict):
+        user_id = payload.get("user_id") if isinstance(payload, dict) else None
+        return conversation_service.start_conversation(user_id)
+
+
+    @router.post("/conversations/{conversation_id}/messages")
+    async def post_message(conversation_id: str, payload: dict):
+        user_id = payload.get("user_id") if isinstance(payload, dict) else None
+        content = payload.get("content") if isinstance(payload, dict) else None
+        if not content:
+            raise HTTPException(status_code=400, detail="Missing content")
+        return conversation_service.add_message(conversation_id, user_id, content)
+
+
+    @router.get("/conversations/{conversation_id}")
+    async def get_conversation(conversation_id: str):
+        conv = conversation_service.get_conversation(conversation_id)
+        if conv is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        return conv
+
+
+    @router.get("/conversations/")
+    async def list_conversations():
+        return conversation_service.list_conversations()

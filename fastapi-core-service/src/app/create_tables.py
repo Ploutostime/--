@@ -1,5 +1,5 @@
-from db import engine, Base
-import models
+from src.app.db import engine, Base
+import src.app.models as models
 
 def create_all():
     Base.metadata.create_all(bind=engine)
